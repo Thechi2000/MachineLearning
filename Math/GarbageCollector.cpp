@@ -48,6 +48,9 @@ GarbageCollector::~GarbageCollector()
 
 void* GarbageCollector::allocate(int size, const char* instanciationFile, int instanciationLine)
 {
+	if (!size)
+		return nullptr;
+
 	void* ptr = malloc(size);
 	m_allocatedMemorySlots.push_back({ ptr, instanciationFile, instanciationLine });
 	return ptr;
@@ -58,18 +61,20 @@ void GarbageCollector::del(void* ptr)
 		return;
 
 	bool hasBeenFreed = false;
-	for (auto& ams : m_allocatedMemorySlots)
+	for (unsigned int i = 0; i < m_allocatedMemorySlots.size(); ++i)
+	{
+		auto& ams = m_allocatedMemorySlots[i];
 		if (ptr == ams.ptr)
 		{
 			if (!hasBeenFreed)
 			{
-				hasBeenFreed = true;
 				free(ams.ptr);
-				ams.ptr = nullptr;
+				hasBeenFreed = true;
 			}
-			else
-				ams.ptr = nullptr;
+
+			m_allocatedMemorySlots.erase(m_allocatedMemorySlots.begin() + i);
 		}
+	}
 }
 
 #pragma warning(default: 6001)

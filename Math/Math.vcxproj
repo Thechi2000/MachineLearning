@@ -141,13 +141,18 @@
   <ItemGroup>
     <ClInclude Include="Console.hpp" />
     <ClInclude Include="GarbageCollector.h" />
+    <ClInclude Include="math.h" />
     <ClInclude Include="macro.hpp" />
     <ClInclude Include="Matrix.h" />
+    <ClInclude Include="NeuralNetwork.h" />
+    <ClInclude Include="Vector.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GarbageCollector.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="NeuralNetwork.cpp" />
+    <ClCompile Include="Vector.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -5,6 +5,8 @@
 #define _size unsigned int width, unsigned int height
 #define _pos unsigned int i, unsigned int j
 
+#include <iostream>
+
 namespace math
 {
 	class Matrix
@@ -14,22 +16,24 @@ namespace math
 		unsigned int m_width, m_height;
 
 		// Private simple constructor
-		Matrix(_size, double** values, bool copy = false);
+		Matrix(_size, double** values);
 
 		static double** new_array(_size);
-		static void delete_array(double** array);
+		void delete_array();
 
 	public:
 		// Redefinition of classic constructors and destructor
 		Matrix();
 		Matrix(const Matrix& other);
-		Matrix(Matrix&& other);
+		Matrix(Matrix&& other) noexcept;
 		~Matrix();
 
 		// Basic constructors
 		Matrix(_size);
 		Matrix(_size, double initialValue);
 		Matrix(_size, double* initialValuesArray);
+
+		static Matrix random(_size);
 
 		// Elements getters and setters
 		double& at(_pos);
@@ -55,18 +59,38 @@ namespace math
 		void swapColumns(unsigned int column1, unsigned int column2);
 		void combineColumns(unsigned int columnToModify, unsigned int columnToBeAdded, double factor);
 
-		// Basic calculations
+		// Basic calculations  
 		double determinant() const;
+		void applySigmoid();
+
+		// State methods
+		bool isSquare() const;
+		bool isDiagonal() const;
+		bool isUpperTriangular() const;
+		bool isBottomTriangular() const;
+		bool isSymetric() const;
+		bool isNull() const;
+
+		// Matrix operations
+		void transpose();
+		void echelon();
+		void echelonAndReduce();
+		void invert();
+
+		Matrix getTransposed() const;
+		Matrix getEchelonned() const;
+		Matrix getEchelonnedAndReducted() const;
+		Matrix getInverse() const;
 
 		// Assignement operators
 		Matrix& operator=(const Matrix& other);
-		Matrix& operator=(Matrix&& other);
+		Matrix& operator=(Matrix&& other) noexcept;
 
 		// Arithmetic assigning operators
 		Matrix& operator+=(const Matrix& other);
 		Matrix& operator-=(const Matrix& other);
-		Matrix& operator*=(double lamda);
-		Matrix& operator/=(double lamda);
+		Matrix& operator*=(double lambda);
+		Matrix& operator/=(double lambda);
 	};
 
 	// Matrix Arithemetic operators
@@ -74,11 +98,14 @@ namespace math
 	Matrix operator-(const Matrix& a, const Matrix& b);
 
 	Matrix operator*(const Matrix& a, const Matrix& b);
-	Matrix operator*(const Matrix& matrix, double lamda);
-	Matrix operator*(double lamda, const Matrix& matrix);
+	Matrix operator*(const Matrix& matrix, double lambda);
+	Matrix operator*(double lambda, const Matrix& matrix);
 
-	Matrix operator/(const Matrix& matrix, double lamda);
-	Matrix operator/(double lamda, const Matrix& matrix);
+	Matrix operator/(const Matrix& matrix, double lambda);
+	Matrix operator/(double lambda, const Matrix& matrix);
+
+	// Matrix Stream operators
+	std::ostream& operator<<(std::ostream& os, const Matrix& m);
 }
 
 #undef _pos
