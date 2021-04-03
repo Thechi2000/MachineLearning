@@ -1,8 +1,11 @@
 #include "NeuralNetwork.h"
 #include "macro.hpp"
 #include "math.h"
+#include "CompressedFile.h"
+#include <fstream>
 
 using namespace math;
+using namespace std;
 
 const double NeuralNetwork::step = 1;
 
@@ -19,7 +22,7 @@ void NeuralNetwork::backPropagation(const math::Vector& input, const math::Vecto
         & previousLayer = layerIndex ? m_layerActivations[layerIndex - 1] : input,
         & z = m_layerActivationsWithoutSigm[layerIndex];
 
-    ui currentGradientElementIndex = -1;
+    ui currentGradientElementIndex = -1; 
 
     for_in_range(i, 0, weights.height())
         for_in_range(j, 0, weights.width())
@@ -40,19 +43,13 @@ void NeuralNetwork::backPropagation(const math::Vector& input, const math::Vecto
 }
 
 NeuralNetwork::NeuralNetwork(ui inputSize, ui outputSize, ui* layerSize, ui layerCount) :
-    m_weightMatrices(new Matrix[layerCount + 1]),
-    m_biasesVectors(new Vector[layerCount + 1]),
-    m_layerActivations(new Vector[layerCount + 1]),
-    m_layerActivationsWithoutSigm(new Vector[layerCount + 1]),
     m_operationCount(layerCount + 1),
-    m_parametersCount(0)
+    m_parametersCount(0),
+    m_weightMatrices(m_operationCount),
+    m_biasesVectors(m_operationCount),
+    m_layerActivations(m_operationCount),
+    m_layerActivationsWithoutSigm(m_operationCount)
 {
-    GC_DEBUG
-    memset(m_weightMatrices, 0, (layerCount + 1) * sizeof(Matrix));
-    memset(m_biasesVectors, 0, (layerCount + 1) * sizeof(Vector));
-    memset(m_layerActivations, 0, (layerCount + 1) * sizeof(Vector));
-    memset(m_layerActivationsWithoutSigm, 0, (layerCount + 1) * sizeof(Vector));
-
     if (!layerCount)
     {
         setLayer(0, inputSize, outputSize);
@@ -73,12 +70,44 @@ NeuralNetwork::NeuralNetwork(ui inputSize, ui outputSize, ui* layerSize, ui laye
         m_parametersCount += m_biasesVectors[i].height();
     }
 }
-NeuralNetwork::~NeuralNetwork()
+NeuralNetwork::NeuralNetwork(const char* filename) :
+    m_operationCount(CompressedFile(filename) >> m_operationCount),
+    m_weightMatrices(m_operationCount),
+    m_biasesVectors(m_operationCount),
+    m_layerActivations(m_operationCount),
+    m_layerActivationsWithoutSigm(m_operationCount),
+    m_parametersCount(0)
 {
-    delete[] m_weightMatrices;
-    delete[] m_biasesVectors;
-    delete[] m_layerActivations;
-    delete[] m_layerActivationsWithoutSigm;
+    CompressedFile file(filename);
+    ui previousLayerSize, nextLayerSize;
+
+    file >> previousLayerSize;
+    file >> nextLayerSize;
+
+    for_in_range(i, 0, m_operationCount)
+    {
+        m_weightMatrices[i] = Matrix(previousLayerSize, nextLayerSize);
+        m_biasesVectors[i] = Vector(nextLayerSize);
+
+        previousLayerSize = nextLayerSize;
+        file >> nextLayerSize;
+    }
+
+    for_in_range(k, 0, m_operationCount)
+    {
+        Matrix& weights = m_weightMatrices[k];
+        Vector& biases = m_biasesVectors[k];
+
+        m_parametersCount += weights.width() * weights.height();
+        m_parametersCount += biases.height();
+       
+        for_in_range(i, 0, weights.height())
+            for_in_range(j, 0, weights.width())
+            file >> weights(i, j);
+
+        for_in_range(i, 0, biases.height())
+            file >> biases[i];
+    }
 }
 
 math::Vector NeuralNetwork::process(const math::Vector& input) const
@@ -153,4 +182,31 @@ void NeuralNetwork::learn(const std::vector<math::Vector>& inputs, const std::ve
     }
 
     DEL(gradient);
+}
+
+bool NeuralNetwork::save(const char* filename) const
+{
+    CompressedFile file(filename, std::ios_base::out | std::ios_base::trunc);
+    if (!file.isOpen())
+
+        return false;
+    file << m_operationCount;
+    file << m_weightMatrices[0].width();
+    for_in_range(i, 0, m_operationCount)
+        file << m_biasesVectors[i].height();
+
+    for_in_range(k, 0, m_operationCount)
+    {
+        const Matrix& weights = m_weightMatrices[k];
+        const Vector& biases = m_biasesVectors[k];
+
+        for_in_range(i, 0, weights.height())
+            for_in_range(j, 0, weights.width())
+            file << weights.get(i, j);
+
+        for_in_range(i, 0, biases.height())
+            file << biases.get(i);
+    }
+
+    return true;
 }

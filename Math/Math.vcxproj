@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CompressedFile.h" />
     <ClInclude Include="Console.hpp" />
     <ClInclude Include="GarbageCollector.h" />
     <ClInclude Include="math.h" />
@@ -148,6 +149,7 @@
     <ClInclude Include="Vector.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CompressedFile.cpp" />
     <ClCompile Include="GarbageCollector.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="main.cpp" />
